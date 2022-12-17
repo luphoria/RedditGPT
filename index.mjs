@@ -1,4 +1,6 @@
 import { ChatGPTAPIBrowser } from 'chatgpt';
+import { Reddit } from './reddit.js'
+const reddit = new Reddit();
 
 const reddit_topics = {
   "Gift ideas": [
@@ -683,13 +685,14 @@ const api = new ChatGPTAPIBrowser({
   email: process.env.OPENAI_EMAIL,
   password: process.env.OPENAI_PASSWORD
 });
+
 console.log("initializing api . . .");
 await api.init();
 console.log("api initialized.");
 
 let character_gender = ["male", "female", "nonbinary"][Math.floor(Math.random() * 3)]; // Without our own specification, it seems to always generate a woman with similar traits.
 
-await sendPrompt("Create one realistic human " + character_gender + " character and describe their name, personality traits, and interests.", "creating a personality from scratch");
+await sendPrompt("Create one realistic " + character_gender + " character and describe their name, personality, and interests. Additionally, give them a simple backstory.", "creating a personality from scratch");
 
 let character_name = await sendPrompt("Respond to this with just their first name and nothing else.", "initializing character in program for future prompts");
 
@@ -716,4 +719,61 @@ let subreddits = [];
 subreddits_raw.split("\n").forEach(subreddit => {
   if(subreddit.startsWith("* ")) subreddits.push(subreddit.replace("* ",""));
 });
-console.log(subreddits);
+
+await reddit.feed(subreddits); // create reddit feed based on these interests
+await sendPrompt(`I want you to roleplay as ${character_name}. Do not break character.`);
+prompt_text = "*You open reddit.*\n\n" + await reddit.post(reddit.pos);
+while(true) {
+  prompt_text += `\nOptions:\n\`.open\`: Open post\n\`.upvote\`: Upvote post\n\`.downvote\`: Downvote post\n\`.next\`: See next post\n\nOnly send your commands, do not send messages or explanations on the commands themselves. Only send one command at a time.`;
+  let action = await sendPrompt(prompt_text);
+  switch(action) {
+    case ".open":
+      prompt_text = await reddit.open();
+      let finished = false; 
+      while(!finished) {
+        prompt_text += `\`.exit\`: Exit post\n\`.comments\`: View comments on post\n\`.upvote\`: Upvote post\n\`.downvote\`: Downvote post\n\`.comment {comment}\`: Add a comment to the post\n\`.next\`: Go to next post\n\nOnly send your commands, do not send messages or explanations on the commands themselves. Only send one command at a time.`;
+        let action = await sendPrompt(prompt_text);
+        switch(action.split(" ")[0]) {
+          case ".exit":
+            prompt_text = await reddit.post(reddit.pos);
+            finished = true;
+            break;
+          case ".comments":
+            prompt_text = await reddit.viewComments();
+            break;
+          case ".upvote":
+            prompt_text = "Post upvoted.\n"
+            break;
+          case ".downvote":
+            prompt_text = "Post downvoted.\n"
+            break;
+          case ".comment":
+            await reddit.postReply(action.split(" ").shift().join());
+            prompt_text = reddit.open();
+            break;
+          case ".next":
+            reddit.pos += 1;
+            prompt_text = await reddit.post(reddit.pos);
+            finished = true;
+            break;
+          default:
+            prompt_text = await reddit.open();
+            break;
+        }
+      }
+      break;
+    case ".upvote":
+      prompt_text = "Post upvoted.\n" + await reddit.post(reddit.pos);
+      break;
+    case ".downvote":
+      prompt_text = "Post downvoted.\n" + await reddit.post(reddit.pos);
+      break;
+    case ".next":
+      reddit.pos += 1;
+      prompt_text = await reddit.post(reddit.pos);
+      break;
+    default:
+      prompt_text = "Invalid syntax.\n" + await reddit.post(reddit.pos);
+      break;
+  }
+}
