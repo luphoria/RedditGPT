@@ -69,7 +69,7 @@ class Reddit {
         return postTitle[postTitle.length - 1];
     }
     async open(id) {
-        if(!this.currentId) this.currentId = this.idFromPos(this.pos);
+        this.currentId = this.idFromPos(this.pos);
         if(!id) id = this.currentId;
         let { stdout, stderr } = await reddioExec(`reddio p -l 1 comments/${id}`);
         if (stderr) console.error("WARNING: reddio encountered an error: ", stderr);

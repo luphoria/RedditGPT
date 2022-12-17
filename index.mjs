@@ -675,8 +675,8 @@ let prompt_text = "";
 let conversation;
 
 async function sendPrompt(msg, note) {
-  console.log(`"${msg}" . . .`);
-  if (note) console.log("// {-} " + note);
+  console.log(`"${msg}" . . .\n`);
+  if (note) console.log("// {-} " + note + "\n");
   let res = await api.sendMessage(msg, {
     onConversationResponse: (response => {
       conversation = response;
@@ -684,7 +684,7 @@ async function sendPrompt(msg, note) {
     conversationId: conversation ? conversation.conversation_id : undefined,
     parentMessageId: conversation ? conversation.message.id : undefined
   });
-  console.log(`\n\n${res}`);
+  console.log(`\n\n${res}\n`);
   return res;
 }
 
@@ -727,8 +727,9 @@ subreddits_raw.split("\n").forEach(subreddit => {
   if(subreddit.startsWith("* ") || subreddit.startsWith("- ")) subreddits.push(subreddit.replace("* ","").replace("- ",""));
 });
 
+console.log("[+] Generating reddit feed . . .")
 await reddit.feed(subreddits); // create reddit feed based on these interests
-await sendPrompt(`I want you to roleplay as ${character_name}. Do not break character.`);
+await sendPrompt(`Roleplay as if you were ${character_name}. Do not break character unless I tell you to.`);
 prompt_text = "*You open reddit.*\n\n" + await reddit.post(reddit.pos);
 while(true) {
   prompt_text += `\nOptions:\n\`.open\`: Open post\n\`.upvote\`: Upvote post\n\`.downvote\`: Downvote post\n\`.next\`: See next post\n\nOnly send your commands, do not send messages or explanations on the commands themselves. Only send one command at a time.`;
@@ -761,8 +762,12 @@ while(true) {
             prompt_text = "Post downvoted.\n"
             break;
           case ".comment":
-            await reddit.postReply(action.split(" ").shift().join());
-            prompt_text = reddit.open();
+            action = action.split(" ");
+            action.shift();
+            action = action.join(" ");
+            if(action.startsWith('"') && action.endsWith('"')) action = action.substring(1,action.length -1);
+            await reddit.postReply(action);
+            prompt_text = "Comment posted.\n" + await reddit.open();
             break;
           case ".next":
             reddit.pos += 1;
