@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "chatgpt": "^2.4.2",
+    "chatgpt": "^2.5.0",
     "dotenv": "^16.0.3",
     "puppeteer": "^19.4.0"
   }
