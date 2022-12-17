@@ -729,17 +729,17 @@ subreddits_raw.split("\n").forEach(subreddit => {
 
 console.log("[+] Generating reddit feed . . .")
 await reddit.feed(subreddits); // create reddit feed based on these interests
-await sendPrompt(`Roleplay as if you were ${character_name}. Do not break character unless I tell you to.`);
+await sendPrompt(`From this point forward, roleplay as if you were ${character_name}. Do not break character unless I tell you to.`);
 prompt_text = "*You open reddit.*\n\n" + await reddit.post(reddit.pos);
 while(true) {
-  prompt_text += `\nOptions:\n\`.open\`: Open post\n\`.upvote\`: Upvote post\n\`.downvote\`: Downvote post\n\`.next\`: See next post\n\nOnly send your commands, do not send messages or explanations on the commands themselves. Only send one command at a time.`;
+  prompt_text += `\nOptions:\n\`.open\`: Open post\n\`.upvote\`: Upvote post\n\`.downvote\`: Downvote post\n\`.next\`: See next post\n\n*What would ${character_name} do?*\nOnly send your commands, do not send messages or explanations on the commands themselves. Only send one command at a time.`;
   let action = await sendPrompt(prompt_text);
   switch(action) {
     case ".open":
       prompt_text = await reddit.open();
       let finished = false; 
       while(!finished) {
-        prompt_text += `\`.exit\`: Exit post\n\`.comments\`: View comments on post\n\`.upvote\`: Upvote post\n\`.downvote\`: Downvote post\n\`.comment {comment}\`: Add a comment to the post\n\`.next\`: Go to next post\n\nOnly send your commands, do not send messages or explanations on the commands themselves. Only send one command at a time.`;
+        prompt_text += `\`.exit\`: Exit post\n\`.comments\`: View comments on post\n\`.upvote\`: Upvote post\n\`.downvote\`: Downvote post\n\`.comment {comment}\`: Add a comment to the post\n\`.next\`: Go to next post\n\n*What would ${character_name} do?*\nOnly send your commands, do not send messages or explanations on the commands themselves. Only send one command at a time.`;
         let action = await sendPrompt(prompt_text);
         switch(action.split(" ")[0]) {
           case ".exit":
@@ -775,7 +775,7 @@ while(true) {
             finished = true;
             break;
           default:
-            prompt_text = await reddit.open();
+            prompt_text = "Please run as a command.\n" + await reddit.open();
             break;
         }
       }
@@ -793,7 +793,7 @@ while(true) {
       prompt_text = await reddit.post(reddit.pos);
       break;
     default:
-      prompt_text = "Invalid syntax.\n" + await reddit.post(reddit.pos);
+      prompt_text = "Please run as a command.\n" + await reddit.post(reddit.pos);
       break;
   }
 }
