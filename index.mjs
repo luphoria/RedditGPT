@@ -675,7 +675,7 @@ let prompt_text = "";
 
 async function sendPrompt(msg, note) {
   console.log(`"${msg}" . . .`);
-  if (note) console.log("//{-} " + note);
+  if (note) console.log("// {-} " + note);
   let res = await api.sendMessage(msg);
   console.log(`\n\n${res}`);
   return res;
@@ -742,9 +742,15 @@ while(true) {
             prompt_text = await reddit.viewComments();
             break;
           case ".upvote":
+            if(action.split[" "][1]) {
+              await reddit.upvote(action.split[" "][1]);
+            } else { await reddit.upvote() }
             prompt_text = "Post upvoted.\n"
             break;
           case ".downvote":
+            if(action.split[" "][1]) {
+              await reddit.downvote(action.split[" "][1]);
+            } else { await reddit.downvote() }
             prompt_text = "Post downvoted.\n"
             break;
           case ".comment":
@@ -763,9 +769,11 @@ while(true) {
       }
       break;
     case ".upvote":
+      await reddit.upvote();
       prompt_text = "Post upvoted.\n" + await reddit.post(reddit.pos);
       break;
     case ".downvote":
+      await reddit.downvote();
       prompt_text = "Post downvoted.\n" + await reddit.post(reddit.pos);
       break;
     case ".next":

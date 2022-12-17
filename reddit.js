@@ -96,5 +96,17 @@ class Reddit {
         }
         return await this.viewComments(id);
     }
+    async upvote(id) {
+        if(!id) id = this.currentId;
+        let { stdout, stderr } = await reddioExec(`reddio upvote ${id}`);
+        if (stderr) console.error("WARNING: reddio encountered an error: ", stderr);
+        return stdout;
+    }
+    async downvote(id) {
+        if(!id) id = this.currentId;
+        let { stdout, stderr } = await reddioExec(`reddio downvote ${id}`);
+        if (stderr) console.error("WARNING: reddio encountered an error: ", stderr);
+        return stdout;
+    }
 }
 module.exports = { Reddit };
