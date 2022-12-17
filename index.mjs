@@ -672,11 +672,18 @@ const reddit_topics = {
 };
 
 let prompt_text = "";
+let conversation;
 
 async function sendPrompt(msg, note) {
   console.log(`"${msg}" . . .`);
   if (note) console.log("// {-} " + note);
-  let res = await api.sendMessage(msg);
+  let res = await api.sendMessage(msg, {
+    onConversationResponse: (response => {
+      conversation = response;
+    }),
+    conversationId: conversation ? conversation.conversation_id : undefined,
+    parentMessageId: conversation ? conversation.message.id : undefined
+  });
   console.log(`\n\n${res}`);
   return res;
 }
@@ -697,27 +704,27 @@ await sendPrompt("Create one realistic " + character_gender + " character and de
 let character_name = await sendPrompt("Respond to this with just their first name and nothing else.", "initializing character in program for future prompts");
 
 prompt_text = `${character_name} is creating a reddit account.\nOf these topics, which 15 would interest them the most? Answer in the form of a bulleted list.\n\n`;
-for (let topic in reddit_topics) prompt_text += " - " + topic + "\n";
-prompt_text += `\nInclude only the top 15 best topics for ${character_name}.`;
+for (let topic in reddit_topics) prompt_text += " * " + topic + "\n";
+prompt_text += `\nInclude only the top 15 best topics for ${character_name}. Only include topics included in this list.`;
 let topics_interests_raw = await sendPrompt(prompt_text)
 topics_interests_raw = topics_interests_raw.split("\n");
 
 let topics = [];
 topics_interests_raw.forEach(topic => {
-  if(reddit_topics[topic.replace("* ","")]) topics.push(topic.replace("* ",""));
+  if(reddit_topics[topic.replace("* ","").replace("- ","")]) topics.push(topic.replace("* ","").replace("- ",""));
 });
 console.log(topics);
 
 prompt_text = `Now ${character_name} wants to join some subreddits. Of this list, which ones should they join?\nAnswer in the form of a bulleted list.\n\n`;
 topics.forEach(topic => {
   reddit_topics[topic].forEach(subreddit => {
-    prompt_text += "- " + subreddit + "\n";
+    prompt_text += "* " + subreddit + "\n";
   })
 });
 let subreddits_raw = await sendPrompt(prompt_text);
 let subreddits = [];
 subreddits_raw.split("\n").forEach(subreddit => {
-  if(subreddit.startsWith("* ")) subreddits.push(subreddit.replace("* ",""));
+  if(subreddit.startsWith("* ") || subreddit.startsWith("- ")) subreddits.push(subreddit.replace("* ","").replace("- ",""));
 });
 
 await reddit.feed(subreddits); // create reddit feed based on these interests
@@ -742,14 +749,14 @@ while(true) {
             prompt_text = await reddit.viewComments();
             break;
           case ".upvote":
-            if(action.split[" "][1]) {
-              await reddit.upvote(action.split[" "][1]);
+            if(action.split(" ")[1]) {
+              await reddit.upvote(action.split(" ")[1]);
             } else { await reddit.upvote() }
             prompt_text = "Post upvoted.\n"
             break;
           case ".downvote":
-            if(action.split[" "][1]) {
-              await reddit.downvote(action.split[" "][1]);
+            if(action.split(" ")[1]) {
+              await reddit.downvote(action.split(" ")[1]);
             } else { await reddit.downvote() }
             prompt_text = "Post downvoted.\n"
             break;
