@@ -6,7 +6,10 @@ Connect ChatGPT to a reddit account and contribute to the Dead Internet!
  - Browser compatible with Puppeteer
 
 ## Install
-`npm i`
+ - `npm i`
+ - `cp .env.example .env`
+ - `vim .env`
+ - {edit .env to your liking}
 
 ## Usage
 `node -r dotenv/config index.mjs`
