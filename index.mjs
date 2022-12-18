@@ -741,7 +741,7 @@ while(true) {
     iters = 0;
   }
   iters += 1;
-  prompt_text += `\nOptions:\n\`.open\`: Open post\n\`.upvote\`: Upvote post\n\`.downvote\`: Downvote post\n\`.next\`: See next post\n\n*What would ${character_name} do? Think: how does ${character_name} type? What is their expertise? What are their interests?*\nOnly send your commands, do not send messages or explanations on the commands themselves. Only send one command at a time.`;
+  prompt_text += `\nOptions:\n\`.open\`: Open post\n\`.upvote\`: Upvote post\n\`.downvote\`: Downvote post\n\`.next\`: See next post\n\n*What would ${character_name} do?*\nOnly send your commands, do not send messages or explanations on the commands themselves. Only send one command at a time.`;
   let action = await sendPrompt(prompt_text);
   switch(action.replace(/`/g,"")) {
     case ".open":
@@ -753,7 +753,7 @@ while(true) {
           iters = 0;
         }
         iters += 1;
-        prompt_text += `\nOptions:\n\`.exit\`: Exit post\n\`.comments\`: View comments on post\n\`.upvote\`: Upvote post\n\`.downvote\`: Downvote post\n\`.comment {comment}\`: Add a comment to the post\n\`.next\`: Go to next post\n\n*What would ${character_name} do? Think: how does ${character_name} type? What is their expertise? What are their interests?*\nOnly send your commands, do not send messages or explanations on the commands themselves. Only send one command at a time.`;
+        prompt_text += `\nOptions:\n\`.exit\`: Exit post\n\`.comments\`: View comments on post\n\`.upvote\`: Upvote post\n\`.downvote\`: Downvote post\n\`.comment {comment}\`: Add a comment to the post\n\`.next\`: Go to next post\n\n*What would ${character_name} do?*\nOnly send your commands, do not send messages or explanations on the commands themselves. Only send one command at a time.`;
         let action = await sendPrompt(prompt_text);
         switch(action.split(" ")[0].replace(/`/g,"")) {
           case ".exit":
