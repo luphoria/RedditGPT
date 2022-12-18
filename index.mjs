@@ -767,6 +767,7 @@ while (true) {
         let action = await sendPrompt(prompt_text);
         switch (action.split(" ")[0].replace(/`/g, "")) {
           case "/exit":
+            reddit.pos += 1;
             prompt_text = await reddit.post(reddit.pos);
             finished = true;
             break;
