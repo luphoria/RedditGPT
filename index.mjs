@@ -699,7 +699,7 @@ console.log("api initialized.");
 
 let character_gender = ["male", "female", "nonbinary"][Math.floor(Math.random() * 3)]; // Without our own specification, it seems to always generate a woman with similar traits.
 
-await sendPrompt("Create one realistic " + character_gender + " character and describe their name, personality, and interests. Additionally, give them a simple backstory.", "creating a personality from scratch");
+let character_desc = await sendPrompt("Create one realistic " + character_gender + " character and describe their name, personality, and interests. Additionally, give them a simple backstory.", "creating a personality from scratch");
 
 let character_name = await sendPrompt("Respond to this with just their first name and nothing else.", "initializing character in program for future prompts");
 
@@ -724,24 +724,38 @@ topics.forEach(topic => {
 let subreddits_raw = await sendPrompt(prompt_text);
 let subreddits = [];
 subreddits_raw.split("\n").forEach(subreddit => {
-  if(subreddit.startsWith("* ") || subreddit.startsWith("- ")) subreddits.push(subreddit.replace("* ","").replace("- ",""));
+  if(subreddit.startsWith("* ") || subreddit.startsWith("- ") || subreddit.startsWith("r/")) subreddits.push(subreddit.replace("* ","").replace("- ",""));
 });
 
 console.log("[+] Generating reddit feed . . .")
 await reddit.feed(subreddits); // create reddit feed based on these interests
-await sendPrompt(`From this point forward, roleplay as if you were ${character_name}. Do not break character unless I tell you to.`);
+await sendPrompt(`From this point forward, roleplay as if you were ${character_name}. Do not break character unless I tell you to. Think: how does ${character_name} type? What is their expertise? What are their interests?`);
 prompt_text = "*You open reddit.*\n\n" + await reddit.post(reddit.pos);
+
+// TODO : include character_desc every 8 iters or so
+let iters = 0;
+
 while(true) {
-  prompt_text += `\nOptions:\n\`.open\`: Open post\n\`.upvote\`: Upvote post\n\`.downvote\`: Downvote post\n\`.next\`: See next post\n\n*What would ${character_name} do?*\nOnly send your commands, do not send messages or explanations on the commands themselves. Only send one command at a time.`;
+  if(iters == 8) {
+    prompt_text += `\n\n(Remember: You're still roleplaying as ${character_name}.\n${character_desc})\n\n`;
+    iters = 0;
+  }
+  iters += 1;
+  prompt_text += `\nOptions:\n\`.open\`: Open post\n\`.upvote\`: Upvote post\n\`.downvote\`: Downvote post\n\`.next\`: See next post\n\n*What would ${character_name} do? Think: how does ${character_name} type? What is their expertise? What are their interests?*\nOnly send your commands, do not send messages or explanations on the commands themselves. Only send one command at a time.`;
   let action = await sendPrompt(prompt_text);
-  switch(action) {
+  switch(action.replace(/`/g,"")) {
     case ".open":
       prompt_text = await reddit.open();
       let finished = false; 
       while(!finished) {
-        prompt_text += `\`.exit\`: Exit post\n\`.comments\`: View comments on post\n\`.upvote\`: Upvote post\n\`.downvote\`: Downvote post\n\`.comment {comment}\`: Add a comment to the post\n\`.next\`: Go to next post\n\n*What would ${character_name} do?*\nOnly send your commands, do not send messages or explanations on the commands themselves. Only send one command at a time.`;
+        if(iters == 8) {
+          prompt_text += `\n\n(Remember: You're still roleplaying as ${character_name}.\n${character_desc})\n\n`;
+          iters = 0;
+        }
+        iters += 1;
+        prompt_text += `\nOptions:\n\`.exit\`: Exit post\n\`.comments\`: View comments on post\n\`.upvote\`: Upvote post\n\`.downvote\`: Downvote post\n\`.comment {comment}\`: Add a comment to the post\n\`.next\`: Go to next post\n\n*What would ${character_name} do? Think: how does ${character_name} type? What is their expertise? What are their interests?*\nOnly send your commands, do not send messages or explanations on the commands themselves. Only send one command at a time.`;
         let action = await sendPrompt(prompt_text);
-        switch(action.split(" ")[0]) {
+        switch(action.split(" ")[0].replace(/`/g,"")) {
           case ".exit":
             prompt_text = await reddit.post(reddit.pos);
             finished = true;
@@ -764,7 +778,7 @@ while(true) {
           case ".comment":
             action = action.split(" ");
             action.shift();
-            action = action.join(" ");
+            action = action.join(" ").replace(/`/g,"");
             if(action.startsWith('"') && action.endsWith('"')) action = action.substring(1,action.length -1);
             await reddit.postReply(action);
             prompt_text = "Comment posted.\n" + await reddit.open();
@@ -775,7 +789,7 @@ while(true) {
             finished = true;
             break;
           default:
-            prompt_text = "Please run as a command.\n" + await reddit.open();
+            prompt_text = "Run one of the following commands, don't simply say the action you would like completed:\n\n" + await reddit.post();
             break;
         }
       }
@@ -793,7 +807,7 @@ while(true) {
       prompt_text = await reddit.post(reddit.pos);
       break;
     default:
-      prompt_text = "Please run as a command.\n" + await reddit.post(reddit.pos);
+      prompt_text = "Run one of the following commands, don't simply say the action you would like completed:\n\n" + await reddit.post();
       break;
   }
 }
