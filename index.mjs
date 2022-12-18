@@ -684,15 +684,21 @@ async function sendPrompt(msg, note) {
   if (AVOID_RL) await sleep(1000 * 20);
   console.log(`"${msg}" . . .\n`);
   if (note) console.log("// {-} " + note + "\n");
-  let res = await api.sendMessage(msg, {
-    onConversationResponse: (response => {
-      conversation = response;
-    }),
-    conversationId: conversation ? conversation.conversation_id : undefined,
-    parentMessageId: conversation ? conversation.message.id : undefined
-  });
-  console.log(`\n-=-=-\n${res}\n-=-=-\n`);
-  return res;
+  while(true) {
+    try {
+      let res = await api.sendMessage(msg, {
+        onConversationResponse: (response => {
+          conversation = response;
+        }),
+        conversationId: conversation ? conversation.conversation_id : undefined,
+        parentMessageId: conversation ? conversation.message.id : undefined
+      });
+      console.log(`\n-=-=-\n${res}\n-=-=-\n`);
+      return res;
+    } catch (err) {
+      console.log("[+] Retrying . . .");
+    }
+  }
 }
 
 const api = new ChatGPTAPIBrowser({
