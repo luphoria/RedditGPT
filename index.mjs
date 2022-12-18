@@ -750,6 +750,11 @@ prompt_text = "*You open reddit.*\n\n" + await reddit.post(reddit.pos);
 
 // TODO : include character_desc every 8 iters or so
 let iters = 0;
+let responseTexts = [
+  "Post upvoted.",
+  "Post downvoted.",
+  "Comment posted.",
+];
 
 while (true) {
   if (iters == 8) {
@@ -810,6 +815,7 @@ while (true) {
             finished = true;
             break;
           default:
+            if (responseTexts.indexOf(action) !== -1) prompt_text = "Run the command, don't display the command's output!\n"
             prompt_text = "Send ONLY either a comment (`/comment {comment}`) or one of the commands (`/exit`, `/comments`, `/upvote`, `/downvote`, `/next`) - not a description of the command. Pick only one command to send. Do not elaborate or explain why you chose that action.\n\n" + await reddit.post();
             break;
         }
@@ -828,6 +834,7 @@ while (true) {
       prompt_text = await reddit.post(reddit.pos);
       break;
     default:
+      if (responseTexts.indexOf(action) !== -1) prompt_text = "Run the command, don't display the command's output!\n"
       prompt_text = "Send ONLY one of the commands (`/open`, `/upvote`, `/downvote`, `/next`) - not a description of the command. Pick only one command to send. Do not elaborate or explain why you chose that action.\n\n" + await reddit.post();
       break;
   }
