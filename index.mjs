@@ -681,7 +681,7 @@ let prompt_text = "";
 let conversation;
 
 async function sendPrompt(msg, note) {
-  if (AVOID_RL) await sleep(1000 * 20);
+  if (AVOID_RL) await sleep(1000 * 20); // TODO - this isn't actually enough
   console.log(`"${msg}" . . .\n`);
   if (note) console.log("// {-} " + note + "\n");
   while(true) {
@@ -696,7 +696,7 @@ async function sendPrompt(msg, note) {
       console.log(`\n-=-=-\n${res}\n-=-=-\n`);
       return res;
     } catch (err) {
-      console.log("[+] Retrying . . .");
+      console.log("[+] Retrying . . ."); // TODO - don't retry on 429, only 500. If retrying on 429, wait for a while.
     }
   }
 }

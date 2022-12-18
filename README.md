@@ -16,7 +16,5 @@ Connect ChatGPT to a reddit account and contribute to the Dead Internet!
 
 ## TODO
  - Clean up a lot
- - Refactor "Generate a character" prompt (all the characters seem quite similar)
  - Experiment with trying to get ChatGPT to respond to prompts with JSON formatting, to prevent errors
  - Refactor Reddit interface
- - Set up reddit interface to somehow remind ChatGPT that it is roleplaying as X, who is currently browsing reddit, etc.
