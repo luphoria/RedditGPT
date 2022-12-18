@@ -1,7 +1,7 @@
 import { ChatGPTAPIBrowser } from 'chatgpt';
 import { Reddit } from './reddit.js'
 const reddit = new Reddit();
-const AVOID_RL = false;
+const AVOID_RL = true;
 const sleep = async (ms) => {
   return new Promise(resolve => {
     setTimeout(() => { resolve() }, ms);
@@ -452,7 +452,7 @@ const reddit_topics = {
     "r/blender",
     "r/ImaginaryLandscapes",
   ],
-  "Photography ": [
+  "Photography": [
     "r/itookapicture",
     "r/analog",
     "r/photography",
@@ -464,7 +464,7 @@ const reddit_topics = {
     "r/web_design",
     "r/typography",
   ],
-  "Programming ": [
+  "Programming": [
     "r/programming",
     "r/ProgrammerHumor",
     "r/learnprogramming",
@@ -488,19 +488,19 @@ const reddit_topics = {
     "r/Woodcarving",
     "r/Pyrography",
   ],
-  "DIY electronics ": [
+  "DIY electronics": [
     "r/electronics",
     "r/arduino",
     "r/AskElectronics",
     "r/raspberry_pi",
   ],
-  "Streetwear ": [
+  "Streetwear": [
     "r/streetwear",
     "r/Sneakers",
     "r/womensstreetwear",
     "r/japanesestreetwear",
   ],
-  "Male fashion ": [
+  "Male fashion": [
     "r/malefashionadvice",
     "r/Watches",
     "r/frugalmalefashion",
@@ -591,7 +591,7 @@ const reddit_topics = {
     "r/drunkencookery",
     "r/forbiddensnacks",
   ],
-  "Home improvement ": [
+  "Home improvement": [
     "r/HomeImprovement",
     "r/homeautomation",
     "r/DIY",
@@ -609,19 +609,19 @@ const reddit_topics = {
     "r/landscaping",
     "r/vegetablegardening",
   ],
-  "Sustainability ": [
+  "Sustainability": [
     "r/simpleliving",
     "r/sustainability",
     "r/ZeroWaste",
     "r/minimalism",
   ],
-  "Fitness ": [
+  "Fitness": [
     "r/Fitness",
     "r/bodyweightfitness",
     "r/crossfit",
     "r/xxfitness",
   ],
-  "Gym ": [
+  "Gym": [
     "r/strength_training",
     "r/bodybuilding",
     "r/homegym",
@@ -633,13 +633,13 @@ const reddit_topics = {
     "r/Meditation",
     "r/Mindfulness",
   ],
-  "Meditation ": [
+  "Meditation": [
     "r/Meditation",
     "r/Mindfulness",
     "r/sleep",
     "r/audiomeditation",
   ],
-  "Running ": [
+  "Running": [
     "r/running",
     "r/trailrunning",
     "r/AdvancedRunning",
@@ -681,7 +681,7 @@ let prompt_text = "";
 let conversation;
 
 async function sendPrompt(msg, note) {
-  if(AVOID_RL) await sleep(1000 * 40);
+  if (AVOID_RL) await sleep(1000 * 20);
   console.log(`"${msg}" . . .\n`);
   if (note) console.log("// {-} " + note + "\n");
   let res = await api.sendMessage(msg, {
@@ -691,7 +691,7 @@ async function sendPrompt(msg, note) {
     conversationId: conversation ? conversation.conversation_id : undefined,
     parentMessageId: conversation ? conversation.message.id : undefined
   });
-  console.log(`\n\n${res}\n`);
+  console.log(`\n-=-=-\n${res}\n-=-=-\n`);
   return res;
 }
 
@@ -704,11 +704,14 @@ console.log("initializing api . . .");
 await api.init();
 console.log("api initialized.");
 
-let character_gender = ["male", "female", "nonbinary"][Math.floor(Math.random() * 3)]; // Without our own specification, it seems to always generate a woman with similar traits.
+await sendPrompt("Create five realistic diverse characters and describe their names, personalities, and interests. Additionally, give them each their own simple backstory.", "generating different characters for more entropy");
 
-let character_desc = await sendPrompt("Create one realistic " + character_gender + " character and describe their name, personality, and interests. Additionally, give them a simple backstory.", "creating a personality from scratch");
+await sendPrompt("Randomly choose one character and describe their name, personality, and interests. Elaborate on their backstory.");
+
+let character_desc = await sendPrompt("Mix up their personality, interests, and backstory, so the character is more original.","more entropy");
 
 let character_name = await sendPrompt("Respond to this with just their first name and nothing else.", "initializing character in program for future prompts");
+character_name = character_name.replace(":","");
 
 prompt_text = `${character_name} is creating a reddit account.\nOf these topics, which 15 would interest them the most? Answer in the form of a bulleted list.\n\n`;
 for (let topic in reddit_topics) prompt_text += " * " + topic + "\n";
@@ -748,10 +751,10 @@ while (true) {
     iters = 0;
   }
   iters += 1;
-  prompt_text += `\nOptions:\n\`.open\`: Open post\n\`.upvote\`: Upvote post\n\`.downvote\`: Downvote post\n\`.next\`: See next post\n\n*What would ${character_name} do?*\nOnly send ${character_name}'s commands, do not send messages or explanations on the commands themselves. Only send one command at a time.`;
+  prompt_text += `\nOptions:\n\`/open\` - Opens post\n\`/upvote\` - Upvotes post\n\`/downvote\` - Downvotes post\n\`/next\` - Goes to next post\n\n*What would ${character_name} do next?*\nOnly send ${character_name}'s next command, do not send explanations on the commands themselves. Only send one command at a time.`;
   let action = await sendPrompt(prompt_text);
   switch (action.replace(/`/g, "")) {
-    case ".open":
+    case "/open":
       prompt_text = await reddit.open();
       let finished = false;
       while (!finished) {
@@ -760,61 +763,65 @@ while (true) {
           iters = 0;
         }
         iters += 1;
-        prompt_text += `\nOptions:\n\`.exit\`: Exit post\n\`.comments\`: View comments on post\n\`.upvote\`: Upvote post\n\`.downvote\`: Downvote post\n\`.comment {comment}\`: Add a comment to the post\n\`.next\`: Go to next post\n\n*What would ${character_name} do?*\nOnly send ${character_name}'s commands, do not send messages or explanations on the commands themselves. Only send one command at a time.`;
+        prompt_text += `\nOptions:\n\`/exit\` - Exits post\n\`/comments\` - Views comments on post\n\`/upvote\` - Upvotes post\n\`/downvote\` - Downvotes post\n\`/comment {comment}\` - Adds a comment to the post\n\`/next\` - Goes to next post\n\n*What would ${character_name} do next?*\nOnly send ${character_name}'s next command, do not send explanations on the commands themselves. Only send one command at a time.`;
         let action = await sendPrompt(prompt_text);
         switch (action.split(" ")[0].replace(/`/g, "")) {
-          case ".exit":
+          case "/exit":
             prompt_text = await reddit.post(reddit.pos);
             finished = true;
             break;
-          case ".comments":
+          case "/comments":
             prompt_text = await reddit.viewComments();
             break;
-          case ".upvote":
+          case "/upvote":
             if (action.split(" ")[1]) {
               await reddit.upvote(action.split(" ")[1]);
             } else { await reddit.upvote() }
             prompt_text = "Post upvoted.\n"
             break;
-          case ".downvote":
+          case "/downvote":
             if (action.split(" ")[1]) {
               await reddit.downvote(action.split(" ")[1]);
             } else { await reddit.downvote() }
             prompt_text = "Post downvoted.\n"
             break;
-          case ".comment":
+          case "/comment":
             action = action.split(" ");
-            action.shift();
-            action = action.join(" ").replace(/`/g, "");
-            if (action.startsWith('"') && action.endsWith('"')) action = action.substring(1, action.length - 1);
-            await reddit.postReply(action);
-            prompt_text = "Comment posted.\n" + await reddit.open();
+            if (!action[1]) {
+              prompt_text += "Usage: `/comment {comment}`\nExample: `/comment Cool, nice work!`\n" + await reddit.open();
+            } else {
+              action.shift();
+              action = action.join(" ").replace(/`/g, "");
+              if (action.startsWith('"') && action.endsWith('"')) action = action.substring(1, action.length - 1);
+              await reddit.postReply(action);
+              prompt_text = "Comment posted.\n" + await reddit.open();
+            }
             break;
-          case ".next":
+          case "/next":
             reddit.pos += 1;
             prompt_text = await reddit.post(reddit.pos);
             finished = true;
             break;
           default:
-            prompt_text = "Send only one of the commands in the list. Pick only one command to send. Do not elaborate or explain why you chose that action.\n\n" + await reddit.post();
+            prompt_text = "Send ONLY one of the commands (`/exit`, `/comments`, `/upvote`, `/downvote`, `/comment {comment}`, `/next`) - not a description of the command. Pick only one command to send. Do not elaborate or explain why you chose that action.\n\n" + await reddit.post();
             break;
         }
       }
       break;
-    case ".upvote":
+    case "/upvote":
       await reddit.upvote();
       prompt_text = "Post upvoted.\n" + await reddit.post(reddit.pos);
       break;
-    case ".downvote":
+    case "/downvote":
       await reddit.downvote();
       prompt_text = "Post downvoted.\n" + await reddit.post(reddit.pos);
       break;
-    case ".next":
+    case "/next":
       reddit.pos += 1;
       prompt_text = await reddit.post(reddit.pos);
       break;
     default:
-      prompt_text = "Send only one of the commands in the list. Pick only one command to send. Do not elaborate or explain why you chose that action.\n\n" + await reddit.post();
+      prompt_text = "Send ONLY one of the commands (`/open`, `/upvote`, `/downvote`, `/next`) - not a description of the command. Pick only one command to send. Do not elaborate or explain why you chose that action.\n\n" + await reddit.post();
       break;
   }
 }
