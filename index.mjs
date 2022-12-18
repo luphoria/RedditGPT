@@ -704,7 +704,7 @@ console.log("initializing api . . .");
 await api.init();
 console.log("api initialized.");
 
-await sendPrompt("Create five realistic diverse characters and describe their names, personalities, and interests. Additionally, give them each their own simple backstory.", "generating different characters for more entropy");
+await sendPrompt("Create five realistic diverse characters, each with an age between 13 and 50. Describe their names, pronouns, personalities, and interests. Additionally, give them each their own simple backstory.", "generating different characters for more entropy");
 
 await sendPrompt("Randomly choose one character and describe their name, personality, and interests. Elaborate on their backstory.");
 
