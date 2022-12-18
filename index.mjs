@@ -1,6 +1,12 @@
 import { ChatGPTAPIBrowser } from 'chatgpt';
 import { Reddit } from './reddit.js'
 const reddit = new Reddit();
+const AVOID_RL = false;
+const sleep = async (ms) => {
+  return new Promise(resolve => {
+    setTimeout(() => { resolve() }, ms);
+  })
+}
 
 const reddit_topics = {
   "Gift ideas": [
@@ -675,6 +681,7 @@ let prompt_text = "";
 let conversation;
 
 async function sendPrompt(msg, note) {
+  if(AVOID_RL) await sleep(1000 * 40);
   console.log(`"${msg}" . . .\n`);
   if (note) console.log("// {-} " + note + "\n");
   let res = await api.sendMessage(msg, {
@@ -711,7 +718,7 @@ topics_interests_raw = topics_interests_raw.split("\n");
 
 let topics = [];
 topics_interests_raw.forEach(topic => {
-  if(reddit_topics[topic.replace("* ","").replace("- ","")]) topics.push(topic.replace("* ","").replace("- ",""));
+  if (reddit_topics[topic.replace("* ", "").replace("- ", "")]) topics.push(topic.replace("* ", "").replace("- ", ""));
 });
 console.log(topics);
 
@@ -724,7 +731,7 @@ topics.forEach(topic => {
 let subreddits_raw = await sendPrompt(prompt_text);
 let subreddits = [];
 subreddits_raw.split("\n").forEach(subreddit => {
-  if(subreddit.startsWith("* ") || subreddit.startsWith("- ") || subreddit.startsWith("r/")) subreddits.push(subreddit.replace("* ","").replace("- ",""));
+  if (subreddit.startsWith("* ") || subreddit.startsWith("- ") || subreddit.startsWith("r/")) subreddits.push(subreddit.replace("* ", "").replace("- ", ""));
 });
 
 console.log("[+] Generating reddit feed . . .")
@@ -735,27 +742,27 @@ prompt_text = "*You open reddit.*\n\n" + await reddit.post(reddit.pos);
 // TODO : include character_desc every 8 iters or so
 let iters = 0;
 
-while(true) {
-  if(iters == 8) {
-    prompt_text += `\n\n(Remember: You're still roleplaying as ${character_name}.\n${character_desc})\n\n`;
+while (true) {
+  if (iters == 8) {
+    prompt_text += `\n\n(Remember, Assistant: You're still roleplaying as ${character_name}.\n${character_desc})\n\n`;
     iters = 0;
   }
   iters += 1;
-  prompt_text += `\nOptions:\n\`.open\`: Open post\n\`.upvote\`: Upvote post\n\`.downvote\`: Downvote post\n\`.next\`: See next post\n\n*What would ${character_name} do?*\nOnly send your commands, do not send messages or explanations on the commands themselves. Only send one command at a time.`;
+  prompt_text += `\nOptions:\n\`.open\`: Open post\n\`.upvote\`: Upvote post\n\`.downvote\`: Downvote post\n\`.next\`: See next post\n\n*What would ${character_name} do?*\nOnly send ${character_name}'s commands, do not send messages or explanations on the commands themselves. Only send one command at a time.`;
   let action = await sendPrompt(prompt_text);
-  switch(action.replace(/`/g,"")) {
+  switch (action.replace(/`/g, "")) {
     case ".open":
       prompt_text = await reddit.open();
-      let finished = false; 
-      while(!finished) {
-        if(iters == 8) {
-          prompt_text += `\n\n(Remember: You're still roleplaying as ${character_name}.\n${character_desc})\n\n`;
+      let finished = false;
+      while (!finished) {
+        if (iters == 8) {
+          prompt_text += `\n\n(Remember, Assistant: You're still roleplaying as ${character_name}.\n${character_desc})\n\n`;
           iters = 0;
         }
         iters += 1;
-        prompt_text += `\nOptions:\n\`.exit\`: Exit post\n\`.comments\`: View comments on post\n\`.upvote\`: Upvote post\n\`.downvote\`: Downvote post\n\`.comment {comment}\`: Add a comment to the post\n\`.next\`: Go to next post\n\n*What would ${character_name} do?*\nOnly send your commands, do not send messages or explanations on the commands themselves. Only send one command at a time.`;
+        prompt_text += `\nOptions:\n\`.exit\`: Exit post\n\`.comments\`: View comments on post\n\`.upvote\`: Upvote post\n\`.downvote\`: Downvote post\n\`.comment {comment}\`: Add a comment to the post\n\`.next\`: Go to next post\n\n*What would ${character_name} do?*\nOnly send ${character_name}'s commands, do not send messages or explanations on the commands themselves. Only send one command at a time.`;
         let action = await sendPrompt(prompt_text);
-        switch(action.split(" ")[0].replace(/`/g,"")) {
+        switch (action.split(" ")[0].replace(/`/g, "")) {
           case ".exit":
             prompt_text = await reddit.post(reddit.pos);
             finished = true;
@@ -764,13 +771,13 @@ while(true) {
             prompt_text = await reddit.viewComments();
             break;
           case ".upvote":
-            if(action.split(" ")[1]) {
+            if (action.split(" ")[1]) {
               await reddit.upvote(action.split(" ")[1]);
             } else { await reddit.upvote() }
             prompt_text = "Post upvoted.\n"
             break;
           case ".downvote":
-            if(action.split(" ")[1]) {
+            if (action.split(" ")[1]) {
               await reddit.downvote(action.split(" ")[1]);
             } else { await reddit.downvote() }
             prompt_text = "Post downvoted.\n"
@@ -778,8 +785,8 @@ while(true) {
           case ".comment":
             action = action.split(" ");
             action.shift();
-            action = action.join(" ").replace(/`/g,"");
-            if(action.startsWith('"') && action.endsWith('"')) action = action.substring(1,action.length -1);
+            action = action.join(" ").replace(/`/g, "");
+            if (action.startsWith('"') && action.endsWith('"')) action = action.substring(1, action.length - 1);
             await reddit.postReply(action);
             prompt_text = "Comment posted.\n" + await reddit.open();
             break;
@@ -789,7 +796,7 @@ while(true) {
             finished = true;
             break;
           default:
-            prompt_text = "Run one of the following commands, don't simply say the action you would like completed:\n\n" + await reddit.post();
+            prompt_text = "Send only one of the commands in the list. Pick only one command to send. Do not elaborate or explain why you chose that action.\n\n" + await reddit.post();
             break;
         }
       }
@@ -807,7 +814,7 @@ while(true) {
       prompt_text = await reddit.post(reddit.pos);
       break;
     default:
-      prompt_text = "Run one of the following commands, don't simply say the action you would like completed:\n\n" + await reddit.post();
+      prompt_text = "Send only one of the commands in the list. Pick only one command to send. Do not elaborate or explain why you chose that action.\n\n" + await reddit.post();
       break;
   }
 }
