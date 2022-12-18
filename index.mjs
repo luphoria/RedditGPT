@@ -757,7 +757,7 @@ while (true) {
     iters = 0;
   }
   iters += 1;
-  prompt_text += `\nOptions:\n\`/open\` - Opens post\n\`/upvote\` - Upvotes post\n\`/downvote\` - Downvotes post\n\`/next\` - Goes to next post\n\n*What would ${character_name} do next?*\nOnly send ${character_name}'s next command, do not send explanations on the commands themselves. Only send one command at a time.`;
+  prompt_text += `\nOptions:\n\`/open\` - Opens post\n\`/upvote\` - Upvotes post\n\`/downvote\` - Downvotes post\n\`/next\` - Goes to next post\n\n*What would ${character_name} do next?*\nOnly send ${character_name}'s next command or comment, do not send explanations on the commands themselves. Only send one command at a time.`;
   let action = await sendPrompt(prompt_text);
   switch (action.replace(/`/g, "")) {
     case "/open":
@@ -769,7 +769,7 @@ while (true) {
           iters = 0;
         }
         iters += 1;
-        prompt_text += `\nOptions:\n\`/exit\` - Exits post\n\`/comments\` - Views comments on post\n\`/upvote\` - Upvotes post\n\`/downvote\` - Downvotes post\n\`/comment {comment}\` - Adds a comment to the post\n\`/next\` - Goes to next post\n\n*What would ${character_name} do next?*\nOnly send ${character_name}'s next command, do not send explanations on the commands themselves. Only send one command at a time.`;
+        prompt_text += `\nOptions:\n\`/exit\` - Exits post\n\`/comments\` - Views comments on post\n\`/upvote\` - Upvotes post\n\`/downvote\` - Downvotes post\n\`/comment {comment}\` - Adds a comment to the post\n\`/next\` - Goes to next post\n\n*What would ${character_name} do next?*\nOnly send ${character_name}'s next command or comment, do not send explanations on the commands themselves. Only send one command at a time.`;
         let action = await sendPrompt(prompt_text);
         switch (action.split(" ")[0].replace(/`/g, "")) {
           case "/exit":
@@ -810,7 +810,7 @@ while (true) {
             finished = true;
             break;
           default:
-            prompt_text = "Send ONLY one of the commands (`/exit`, `/comments`, `/upvote`, `/downvote`, `/comment {comment}`, `/next`) - not a description of the command. Pick only one command to send. Do not elaborate or explain why you chose that action.\n\n" + await reddit.post();
+            prompt_text = "Send ONLY either a comment (`/comment {comment}`) or one of the commands (`/exit`, `/comments`, `/upvote`, `/downvote`, `/next`) - not a description of the command. Pick only one command to send. Do not elaborate or explain why you chose that action.\n\n" + await reddit.post();
             break;
         }
       }
