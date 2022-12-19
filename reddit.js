@@ -88,11 +88,13 @@ class Reddit {
     async postReply(msg,id) {
         if(!id) id = this.currentId;
         if(id.startsWith("t3_")) { // post reply
-            await reddioExec(`reddio comment -t "${msg}" ${id}`);
+            let { stdout, stderr } = await reddioExec(`reddio comment -t "${msg}" ${id}`);
+            if (stderr) console.error("WARNING: reddio encountered an error: ", stderr);
         }
         else if(id.startsWith("t1_")) {
             // replying to comment
-            await reddioExec(`echo "${msg}" | reddio comment ${id}`);
+            let { stdout, stderr } = await reddioExec(`echo "${msg}" | reddio comment ${id}`);
+            if (stderr) console.error("WARNING: reddio encountered an error: ", stderr);
         }
         return await this.viewComments(id);
     }
