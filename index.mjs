@@ -758,23 +758,32 @@ let responseTexts = [
 
 while (true) {
   if (iters == 8) {
-    prompt_text += `\n\n(Remember, Assistant: You're still roleplaying as ${character_name}.\n${character_desc})\n\n`;
+    prompt_text += `\n\n(Remember, Assistant: You're still acting as if you were ${character_name}.\n${character_desc})\n\n`;
     iters = 0;
   }
   iters += 1;
-  prompt_text += `\nOptions:\n\`/open\` - Opens post\n\`/upvote\` - Upvotes post\n\`/downvote\` - Downvotes post\n\`/next\` - Goes to next post\n\n*What would ${character_name} do next?*\nOnly send ${character_name}'s next command or comment, do not send explanations on the commands themselves. Only send one command at a time.`;
+  prompt_text += `\nOptions:\n\`/submit "subreddit" "title" "post content"\` - Adds a text post to a subreddit\n\`/open\` - Opens post\n\`/upvote\` - Upvotes post\n\`/downvote\` - Downvotes post\n\`/next\` - Goes to next post\n\n*What would ${character_name} do next?*\nOnly send ${character_name}'s next command or comment, do not send explanations on the commands themselves. Only send one command at a time.`;
   let action = await sendPrompt(prompt_text);
-  switch (action.replace(/`/g, "")) {
+  switch (action.split(" ")[0].replace(/`/g, "")) {
+    case "/submit":
+      action = action.split('"');
+      if (!action[1]) {
+        prompt_text += "Usage: `/submit \"subreddit\" \"title\" \"post content\"`\nExample: `/submit \"r/test\" \"test post\" \"Testing, 123\"`\n" + await reddit.open();
+      } else {
+        await reddit.submit(action[1],action[3],action[5]);
+        prompt_text = "Submission posted.\n" + await reddit.open();
+      }
+      break;
     case "/open":
       prompt_text = await reddit.open();
       let finished = false;
       while (!finished) {
         if (iters == 8) {
-          prompt_text += `\n\n(Remember, Assistant: You're still roleplaying as ${character_name}.\n${character_desc})\n\n`;
+          prompt_text += `\n\n(Remember, Assistant: You're still acting as if you were ${character_name}.\n${character_desc})\n\n`;
           iters = 0;
         }
         iters += 1;
-        prompt_text += `\nOptions:\n\`/exit\` - Exits post\n\`/comments\` - Views comments on post\n\`/upvote\` - Upvotes post\n\`/downvote\` - Downvotes post\n\`/comment {comment}\` - Adds a comment to the post\n\`/next\` - Goes to next post\n\n*What would ${character_name} do next?*\nOnly send ${character_name}'s next command or comment, do not send explanations on the commands themselves. Only send one command at a time.`;
+        prompt_text += `\nOptions:\n\`/exit\` - Exits post\n\`/comments\` - Views comments on post\n\`/upvote\` - Upvotes post\n\`/downvote\` - Downvotes post\n\`/comment "comment"\` - Adds a comment to the post\n\`/next\` - Goes to next post\n\n*What would ${character_name} do next?*\nOnly send ${character_name}'s next command or comment, do not send explanations on the commands themselves. Only send one command at a time.`;
         let action = await sendPrompt(prompt_text);
         switch (action.split(" ")[0].replace(/`/g, "")) {
           case "/exit":
@@ -800,7 +809,7 @@ while (true) {
           case "/comment":
             action = action.split(" ");
             if (!action[1]) {
-              prompt_text += "Usage: `/comment {comment}`\nExample: `/comment Cool, nice work!`\n" + await reddit.open();
+              prompt_text += "Usage: `/comment \"comment\"`\nExample: `/comment \"Cool, nice work!\"`\n" + await reddit.open();
             } else {
               action.shift();
               action = action.join(" ").replace(/`/g, "");
@@ -816,7 +825,7 @@ while (true) {
             break;
           default:
             if (responseTexts.indexOf(action) !== -1) prompt_text = "Run the command, don't display the command's output!\n"
-            prompt_text = "Send ONLY either a comment (`/comment {comment}`) or one of the commands (`/exit`, `/comments`, `/upvote`, `/downvote`, `/next`) - not a description of the command. Pick only one command to send. Do not elaborate or explain why you chose that action.\n\n" + await reddit.post();
+            prompt_text = "Send ONLY either a comment (`/comment \"comment\"`) or one of the commands (`/exit`, `/comments`, `/upvote`, `/downvote`, `/next`) - not a description of the command. Pick only one command to send. Do not elaborate or explain why you chose that action.\n\n" + await reddit.post();
             break;
         }
       }
@@ -835,7 +844,7 @@ while (true) {
       break;
     default:
       if (responseTexts.indexOf(action) !== -1) prompt_text = "Run the command, don't display the command's output!\n"
-      prompt_text = "Send ONLY one of the commands (`/open`, `/upvote`, `/downvote`, `/next`) - not a description of the command. Pick only one command to send. Do not elaborate or explain why you chose that action.\n\n" + await reddit.post();
+      prompt_text = "Send ONLY one of the commands (`/submit`, `/open`, `/upvote`, `/downvote`, `/next`) - not a description of the command. Pick only one command to send. Do not elaborate or explain why you chose that action.\n\n" + await reddit.post();
       break;
   }
 }

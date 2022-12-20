@@ -83,7 +83,9 @@ class Reddit {
         return stdout;
     }
     async submit(subreddit,title,content) {
-        await reddioExec(`reddio submit -t "${content}" ${subreddit} "${title}"`);
+        let { stdout, stderr } = await reddioExec(`reddio submit -t "${content}" ${subreddit} "${title}"`);
+        if (stderr) console.error("WARNING: reddio encountered an error: ", stderr);
+        return stdout;
     }
     async postReply(msg,id) {
         if(!id) id = this.currentId;
